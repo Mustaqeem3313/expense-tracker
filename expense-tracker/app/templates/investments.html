@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Investments - Expense Tracker{% endblock %}
+
+{% block page_title %}Investments{% endblock %}
+
+{% block content %}
+<div class="investments-content">
+    <!-- Add Investment Form -->
+    <div class="form-section">
+        <h3>Add New Investment</h3>
+        <form method="POST" class="investment-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="investment_type">Investment Type</label>
+                    <select name="investment_type" id="investment_type" required>
+                        <option value="">Select Investment Type</option>
+                        <option value="Stocks">Stocks</option>
+                        <option value="Bonds">Bonds</option>
+                        <option value="Mutual Funds">Mutual Funds</option>
+                        <option value="Real Estate">Real Estate</option>
+                        <option value="Cryptocurrency">Cryptocurrency</option>
+                        <option value="Fixed Deposit">Fixed Deposit</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="amount">Amount Invested</label>
+                    <input type="number" name="amount" id="amount" step="0.01" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="date">Investment Date</label>
+                    <input type="date" name="date" id="date" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <input type="text" name="description" id="description" placeholder="Optional description">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Investment</button>
+        </form>
+    </div>
+
+    <!-- Investment Portfolio -->
+    <div class="history-section">
+        <h3>Investment Portfolio</h3>
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if investments %}
+                    {% for investment in investments %}
+                    <tr>
+                        <td>{{ investment.date.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ investment.investment_type }}</td>
+                        <td>{{ investment.description or 'No description' }}</td>
+                        <td>${{ "%.2f"|format(investment.amount) }}</td>
+                        <td>
+                            <button class="btn-edit" onclick="editInvestment({{ investment.id }})">Edit</button>
+                            <button class="btn-delete" onclick="deleteInvestment({{ investment.id }})">Delete</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="no-data">No investments recorded yet</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Investment Summary -->
+    <div class="form-section">
+        <h3>Investment Summary</h3>
+        <div class="investment-summary">
+            {% set total_invested = investments|sum(attribute='amount') %}
+            <div class="summary-item">
+                <span>Total Invested:</span>
+                <span class="amount">${{ "%.2f"|format(total_invested) }}</span>
+            </div>
+            <div class="summary-item">
+                <span>Number of Investments:</span>
+                <span class="count">{{ investments|length }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

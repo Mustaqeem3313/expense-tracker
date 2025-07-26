@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Budgets - Expense Tracker{% endblock %}
+
+{% block page_title %}Budgets{% endblock %}
+
+{% block content %}
+<div class="budgets-content">
+    <!-- Set Budget Form -->
+    <div class="form-section">
+        <h3>Set Budget</h3>
+        <form method="POST" class="budget-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <select name="category" id="category" required>
+                        <option value="">Select Category</option>
+                        <option value="Groceries">Groceries</option>
+                        <option value="Utilities">Utilities</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="Transportation">Transportation</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Shopping">Shopping</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="amount">Budget Amount</label>
+                    <input type="number" name="amount" id="amount" step="0.01" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="period">Budget Period</label>
+                    <select name="period" id="period" required>
+                        <option value="monthly">Monthly</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="daily">Daily</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Set Budget</button>
+        </form>
+    </div>
+
+    <!-- Budget Progress -->
+    <div class="budget-progress">
+        <h3>Budget Progress</h3>
+        {% if budgets %}
+            {% for budget in budgets %}
+            <div class="progress-item">
+                <div class="progress-header">
+                    <span>{{ budget.category }}</span>
+                    <span>${{ "%.2f"|format(budget.spent) }} / ${{ "%.2f"|format(budget.amount) }}</span>
+                </div>
+                <div class="progress-bar">
+                    {% set progress = (budget.spent / budget.amount * 100) if budget.amount > 0 else 0 %}
+                    {% if progress < 70 %}
+                        {% set color = '#28a745' %}
+                    {% elif progress < 90 %}
+                        {% set color = '#ffc107' %}
+                    {% else %}
+                        {% set color = '#dc3545' %}
+                    {% endif %}
+                    <!-- Fixed: Use simple comparison instead of min filter -->
+                    {% set width = 100 if progress > 100 else progress %}
+                    <div class="progress-fill" style="width: {{ width }}%; background-color: {{ color }};"></div>
+                </div>
+                <div class="progress-percentage">{{ "%.1f"|format(progress) }}%</div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="no-data">No budgets set yet</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

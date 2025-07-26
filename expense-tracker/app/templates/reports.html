@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Expense Tracker{% endblock %}
+
+{% block page_title %}Reports{% endblock %}
+
+{% block content %}
+<div class="reports-content">
+    <!-- Financial Charts Section -->
+    <div class="charts-section">
+        <h2>Financial Insights</h2>
+        
+        <!-- Chart Grid -->
+        <div class="charts-grid">
+            <!-- Income vs Expenses Line Chart -->
+            <div class="chart-container">
+                <h3>Income vs Expenses Trend</h3>
+                <canvas id="incomeExpenseChart"></canvas>
+            </div>
+            
+            <!-- Expense by Category Pie Chart -->
+            <div class="chart-container">
+                <h3>Expenses by Category</h3>
+                <canvas id="categoryChart"></canvas>
+            </div>
+            
+            <!-- Monthly Comparison Bar Chart -->
+            <div class="chart-container">
+                <h3>Monthly Financial Overview</h3>
+                <canvas id="monthlyChart"></canvas>
+            </div>
+            
+            <!-- Savings Trend Chart -->
+            <div class="chart-container">
+                <h3>Savings Trend</h3>
+                <canvas id="savingsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    {% if not reportlab_available %}
+    <!-- Warning message if ReportLab is not available -->
+    <div class="alert alert-warning">
+        <h4>PDF Generation Not Available</h4>
+        <p>To enable PDF report generation, please install the ReportLab library:</p>
+        <code>pip install reportlab</code>
+        <p>After installation, restart your Flask application to enable PDF reports.</p>
+    </div>
+    {% endif %}
+
+    <!-- Report Generation Form -->
+    <div class="form-section">
+        <h3>Generate PDF Report</h3>
+        <form method="POST" class="report-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="report_type">Report Type</label>
+                    <select name="report_type" id="report_type" required>
+                        <option value="">Select Report Type</option>
+                        <option value="expenses">Expenses Report</option>
+                        <option value="income">Income Report</option>
+                        <option value="budget">Budget Report</option>
+                        <option value="summary">Financial Summary</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="period">Period</label>
+                    <select name="period" id="period" required>
+                        <option value="">Select Period</option>
+                        <option value="current_month">Current Month</option>
+                        <option value="last_month">Last Month</option>
+                        <option value="quarter">Current Quarter</option>
+                        <option value="year">Current Year</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row" id="custom-date-range" style="display: none;">
+                <div class="form-group">
+                    <label for="start_date">Start Date</label>
+                    <input type="date" name="start_date" id="start_date">
+                </div>
+                <div class="form-group">
+                    <label for="end_date">End Date</label>
+                    <input type="date" name="end_date" id="end_date">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary" {% if not reportlab_available %}disabled{% endif %}>
+                {% if reportlab_available %}
+                Generate PDF Report
+                {% else %}
+                PDF Generation Disabled
+                {% endif %}
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+// Chart.js configurations and initialization
+document.addEventListener('DOMContentLoaded', function() {
+    // Get chart data from server
+    var chartDataElement = document.createElement('div');
+    chartDataElement.innerHTML = '{{ chart_data | tojson | safe }}';
+    var chartData = JSON.parse(chartDataElement.textContent || chartDataElement.innerText);
+    
+    // Common chart options
+    var commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top'
+            }
+        }
+    };
+
+    // Income vs Expenses Line Chart
+    var incomeExpenseCtx = document.getElementById('incomeExpenseChart').getContext('2d');
+    new Chart(incomeExpenseCtx, {
+        type: 'line',
+        data: {
+            labels: chartData.months,
+            datasets: [{
+                label: 'Income',
+                data: chartData.income,
+                borderColor: '#28a745',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                fill: true,
+                tension: 0.4
+            }, {
+                label: 'Expenses',
+                data: chartData.expenses,
+                borderColor: '#dc3545',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': $' + context.parsed.y.toFixed(2);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toFixed(0);
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Expense by Category Pie Chart
+    if (chartData.categories && chartData.categories.length > 0) {
+        var categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: chartData.categories,
+                datasets: [{
+                    data: chartData.category_amounts,
+                    backgroundColor: [
+                        '#FF6384',
+                        '#36A2EB',
+                        '#FFCE56',
+                        '#4BC0C0',
+                        '#9966FF',
+                        '#FF9F40',
+                        '#FF6384',
+                        '#C9CBCF'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                var total = 0;
+                                for (var i = 0; i < context.dataset.data.length; i++) {
+                                    total += context.dataset.data[i];
+                                }
+                                var percentage = ((context.parsed / total) * 100).toFixed(1);
+                                return context.label + ': $' + context.parsed.toFixed(2) + ' (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Monthly Comparison Bar Chart
+    var monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+    new Chart(monthlyCtx, {
+        type: 'bar',
+        data: {
+            labels: chartData.months,
+            datasets: [{
+                label: 'Income',
+                data: chartData.income,
+                backgroundColor: 'rgba(40, 167, 69, 0.8)',
+                borderColor: '#28a745',
+                borderWidth: 1
+            }, {
+                label: 'Expenses',
+                data: chartData.expenses,
+                backgroundColor: 'rgba(220, 53, 69, 0.8)',
+                borderColor: '#dc3545',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': $' + context.parsed.y.toFixed(2);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toFixed(0);
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Savings Trend Chart
+    var savingsData = [];
+    for (var i = 0; i < chartData.income.length; i++) {
+        savingsData.push(chartData.income[i] - chartData.expenses[i]);
+    }
+    
+    var savingsCtx = document.getElementById('savingsChart').getContext('2d');
+    new Chart(savingsCtx, {
+        type: 'line',
+        data: {
+            labels: chartData.months,
+            datasets: [{
+                label: 'Net Savings',
+                data: savingsData,
+                borderColor: '#17a2b8',
+                backgroundColor: 'rgba(23, 162, 184, 0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            var value = context.parsed.y;
+                            var status = value >= 0 ? 'Saved' : 'Deficit';
+                            return status + ': $' + Math.abs(value).toFixed(2);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toFixed(0);
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Handle custom date range toggle
+    var periodSelect = document.getElementById('period');
+    if (periodSelect) {
+        periodSelect.addEventListener('change', function() {
+            var customRange = document.getElementById('custom-date-range');
+            if (this.value === 'custom') {
+                customRange.style.display = 'flex';
+            } else {
+                customRange.style.display = 'none';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

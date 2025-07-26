@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker - Welcome</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="landing-page">
+        <header class="landing-header">
+            <div class="logo">
+                <h1>Expense Tracker</h1>
+            </div>
+            <div class="auth-buttons">
+                <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Login</a>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-secondary">Register</a>
+            </div>
+        </header>
+        
+        <main class="landing-main">
+            <div class="developer-info">
+                <div class="developer-photo">
+                    <img src="{{ url_for('static', filename='images/developer-photo.jpg') }}" alt="Developer Photo">
+                </div>
+                <div class="developer-details">
+                    <h2>Welcome to Expense Tracker</h2>
+                    <p>Track your expenses, manage budgets, and monitor your financial health with our comprehensive expense tracking tool.</p>
+                    <h3>Developed by Mustaqeem Ishratali Shaikh</h3>
+                    <p>Full Stack Developer/ Data Analyst passionate about creating intuitive financial management solutions.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Expense Tracker{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Expense Tracker</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="{{ url_for('dashboard.dashboard') }}" class="nav-item">Dashboard</a></li>
+                    <li><a href="{{ url_for('expenses.expenses') }}" class="nav-item">Expenses</a></li>
+                    <li><a href="{{ url_for('income.income') }}" class="nav-item">Income</a></li>
+                    <li><a href="{{ url_for('budgets.budgets') }}" class="nav-item">Budgets</a></li>
+                    <li><a href="{{ url_for('investments.investments') }}" class="nav-item">Investments</a></li>
+                    <li><a href="{{ url_for('reports.reports') }}" class="nav-item">Reports</a></li>
+                    <li><a href="{{ url_for('settings.settings') }}" class="nav-item">Settings</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="app-header">
+                <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+                <div class="user-info">
+                    <span>{{ session.get('user_name', 'User') }}</span>
+                    <a href="{{ url_for('auth.logout') }}" class="btn-logout">Logout</a>
+                </div>
+            </header>
+
+            <div class="content-area">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

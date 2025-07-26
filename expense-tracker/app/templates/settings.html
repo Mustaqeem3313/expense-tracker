@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Expense Tracker{% endblock %}
+
+{% block page_title %}Settings{% endblock %}
+
+{% block content %}
+<div class="settings-content">
+    <!-- Personal Information -->
+    <div class="form-section">
+        <h3>Personal Information</h3>
+        <form method="POST" class="settings-form">
+            <input type="hidden" name="form_type" value="personal_info">
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" name="name" id="name" value="{{ user.name if user else '' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" name="email" id="email" value="{{ user.email if user else '' }}" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Update Information</button>
+        </form>
+    </div>
+
+    <!-- Password Change -->
+    <div class="form-section">
+        <h3>Change Password</h3>
+        <form method="POST" class="settings-form">
+            <input type="hidden" name="form_type" value="change_password">
+            <div class="form-group">
+                <label for="current_password">Current Password</label>
+                <input type="password" name="current_password" id="current_password" required>
+            </div>
+            <div class="form-group">
+                <label for="new_password">New Password</label>
+                <input type="password" name="new_password" id="new_password" required minlength="6">
+            </div>
+            <div class="form-group">
+                <label for="confirm_new_password">Confirm New Password</label>
+                <input type="password" name="confirm_new_password" id="confirm_new_password" required minlength="6">
+            </div>
+            <button type="submit" class="btn btn-primary">Change Password</button>
+        </form>
+    </div>
+
+    <!-- Application Settings -->
+    <div class="form-section">
+        <h3>Application Settings</h3>
+        <form method="POST" class="settings-form">
+            <input type="hidden" name="form_type" value="app_settings">
+            <div class="form-group">
+                <label for="currency">Currency</label>
+                <select name="currency" id="currency">
+                    <option value="USD" {% if user_settings and user_settings.currency == 'USD' %}selected{% endif %}>USD ($)</option>
+                    <option value="EUR" {% if user_settings and user_settings.currency == 'EUR' %}selected{% endif %}>EUR (€)</option>
+                    <option value="GBP" {% if user_settings and user_settings.currency == 'GBP' %}selected{% endif %}>GBP (£)</option>
+                    <option value="INR" {% if user_settings and user_settings.currency == 'INR' %}selected{% endif %}>INR (₹)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="notifications">Email Notifications</label>
+                <select name="notifications" id="notifications">
+                    <option value="enabled" {% if user_settings and user_settings.notifications == 'enabled' %}selected{% endif %}>Enabled</option>
+                    <option value="disabled" {% if user_settings and user_settings.notifications == 'disabled' %}selected{% endif %}>Disabled</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Settings</button>
+        </form>
+    </div>
+
+    <!-- Current Settings Display -->
+    <div class="form-section">
+        <h3>Current Settings</h3>
+        <div class="settings-display">
+            <div class="setting-item">
+                <span><strong>Currency:</strong></span>
+                <span>{{ user_settings.currency if user_settings else 'USD' }}</span>
+            </div>
+            <div class="setting-item">
+                <span><strong>Notifications:</strong></span>
+                <span>{{ user_settings.notifications.title() if user_settings else 'Enabled' }}</span>
+            </div>
+            <div class="setting-item">
+                <span><strong>Account Created:</strong></span>
+                <span>{{ user.created_at.strftime('%Y-%m-%d') if user else 'Unknown' }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Management -->
+    <div class="form-section">
+        <h3>Data Management</h3>
+        <div class="data-actions">
+            <a href="{{ url_for('settings.export_data') }}" class="btn btn-secondary">Export Data</a>
+            <button class="btn btn-danger" onclick="confirmDataReset()">Reset All Data</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDataReset() {
+    if (confirm('Are you sure you want to reset all data? This action cannot be undone.')) {
+        window.location.href = "{{ url_for('settings.reset_data') }}";
+    }
+}
+</script>
+
+<style>
+.settings-display {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.setting-item:last-child {
+    border-bottom: none;
+}
+</style>
+{% endblock %}
